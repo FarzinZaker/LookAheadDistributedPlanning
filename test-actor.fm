@@ -1,0 +1,83 @@
+(view ActorId from TRIV to ACTOR is
+	sort Elt to ActorId .
+endv)
+
+(omod TEST_ACTOR is
+
+	including ACTOR .
+	protecting LIST{ActorId} .
+	
+	class TestActor | parent : ActorId, isLeader : Bool, leader : ActorId, adaptationOption : Int, receivedRoles : List{ActorId}, started : Bool, receivedScores : Int, totalScore : Int .
+	
+	msg informLeader : ActorId ActorId -> Msg .
+	msg role : ActorId ActorId ActorId -> Msg .
+	msg start : ActorId -> Msg .
+	msg request : ActorId -> Msg .
+	msg score : ActorId Int Int -> Msg .
+	
+	vars Id Parent Leader AdaptationOption ReceivedScores TotalScore Score : Int .
+	var ReceivedRoles : List{ActorId} .
+	var IsLeader, Started : Bool .
+	
+	--- inform leader
+	rl [informLeader] :
+		informLeader(Id, Leader)
+		< Id : TestActor | leader : Leader, parent : Parent >
+		=>
+		role(Id, Leader, Parent)
+		< Id : TestActor | > .
+	
+	--- role
+	rl [role] :
+		role(Id, Leader, Parent)
+		< Leader : TestActor | receivedRoles : ReceivedRoles >
+		=> 
+		< Leader : TestActor | receivedRoles : append(Id, ReceivedRoles) > .
+		
+	crl [role] :
+		< Id : TestActor | receivedRoles : ReceivedRoles >
+		=> 
+		< Id : TestActor | started : true >
+		if size(ReceivedRoles) == 4 .
+	
+	crl [role] :
+		< Id : TestActor | receivedRoles : ReceivedRoles, started : Started >
+		=> 
+		start(head(ReceivedRoles))
+		< Id : TestActor | receivedRoles : tail(ReceivedRoles) >
+		if Started and size(ReceivedRoles) > 0 .
+		
+	--- start
+	rl [start] :
+		start(Id)
+		< Id : TestActor | >
+		=>
+		request(Id)
+		< Id : TestActor | > .
+	
+	--- request	
+	rl [request] :
+		request(Id)
+		< Id : TestActor | leader : Leader, isLeader : IsLeader, adaptationOption : AdaptationOption >
+		=>
+		if IsLeader then
+			score(Leader, random(Id), AdaptationOption)
+			< Id : TestActor | >
+		else
+			score(Leader, random(Id), AdaptationOption)
+		fi .
+	
+	--- score	
+	rl [score] :
+		score(Id, Score, AdaptationOption)
+		< Id : TestActor | receivedScores : ReceivedScores, totalScore : TotalScore >
+		=>
+		< Id : TestActor | receivedScores : (ReceivedScores + 1), totalScore : (TotalScore + Score) > .
+		
+	crl [score] :
+		< Id : TestActor | receivedScores : ReceivedScores, totalScore : TotalScore, parent : Parent, adaptationOption : AdaptationOption >
+		=>
+		score(Parent, TotalScore, AdaptationOption)
+		if ReceivedScores == 4 .
+	
+endom)

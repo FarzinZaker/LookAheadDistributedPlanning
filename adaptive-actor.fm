@@ -1,0 +1,77 @@
+(omod ADAPTIVE_ACTOR is
+
+	including TEST_ACTOR .
+	
+	class AdaptiveActor | adapting : Bool, bestScore : Int, bestOption : Int, receivedScores : Int, adapted : Bool .
+	
+	msg startAdaptation : ActorId -> Msg .
+	msg inviteOthers : ActorId Int -> Msg .
+	msg cooperateInAdaptation : ActorId ActorId Int -> Msg .
+	
+	vars Id LeaderId AdaptationOption Counter BestScore BestOption Score ReceivedScores : Int .
+	
+	op adaptiveActorId : Int -> Int .
+	eq adaptiveActorId(Id) = 1000 + Id .
+	op testActorId : Int Int -> Int .
+	eq testActorId(Id, AdaptationOption) = Id * 1000 + AdaptationOption .
+
+	
+	--- start adaptation
+	rl [startAdaptation] :
+		startAdaptation(Id) 
+		< Id : AdaptiveActor | adapting : false >
+		=>
+		< Id : AdaptiveActor | adapting : true >
+		< testActorId(Id, 1) : TestActor | parent : Id, isLeader : true, leader : testActorId(Id, 1), adaptationOption : 1, receivedRoles : append(testActorId(Id, 1), nil), started : false, receivedScores : 0, totalScore : 0 >
+		< testActorId(Id, 2) : TestActor | parent : Id, isLeader : true, leader : testActorId(Id, 2), adaptationOption : 2, receivedRoles : append(testActorId(Id, 2), nil), started : false, receivedScores : 0, totalScore : 0 >
+		< testActorId(Id, 3) : TestActor | parent : Id, isLeader : true, leader : testActorId(Id, 3), adaptationOption : 3, receivedRoles : append(testActorId(Id, 3), nil), started : false, receivedScores : 0, totalScore : 0 >
+		< testActorId(Id, 4) : TestActor | parent : Id, isLeader : true, leader : testActorId(Id, 4), adaptationOption : 4, receivedRoles : append(testActorId(Id, 4), nil), started : false, receivedScores : 0, totalScore : 0 >
+		inviteOthers(Id, 1) .
+		
+	--- invite others
+	rl [inviteOthers] :
+		inviteOthers(Id, Counter) 
+		< Id : AdaptiveActor | adapting : true >
+		=>
+		if Counter <= numberOfActors then
+			< Id : AdaptiveActor | >
+			if Id =/= adaptiveActorId(Counter) then
+				cooperateInAdaptation(adaptiveActorId(Counter), testActorId(Id, 1), 1)
+				cooperateInAdaptation(adaptiveActorId(Counter), testActorId(Id, 2), 2)
+				cooperateInAdaptation(adaptiveActorId(Counter), testActorId(Id, 3), 3)
+				cooperateInAdaptation(adaptiveActorId(Counter), testActorId(Id, 4), 4) 
+				inviteOthers(Id, Counter + 1)
+			else
+				inviteOthers(Id, Counter + 1)
+			fi
+		else
+			< Id : AdaptiveActor | >
+		fi .
+		
+	--- cooperate in adaptation
+	rl [cooperateInAdaptation] :
+		cooperateInAdaptation(Id, LeaderId, AdaptationOption)
+		< Id : AdaptiveActor | adapting : false >
+		=>
+		< Id : AdaptiveActor | >
+		< testActorId(Id, AdaptationOption) : TestActor | parent : Id, isLeader : false, leader : LeaderId, adaptationOption : AdaptationOption, receivedRoles : nil, started : false, receivedScores : 0, totalScore : 0 >
+		informLeader(testActorId(Id, AdaptationOption), LeaderId) .
+		
+	--- score
+	rl [score] :
+		score(Id, Score, AdaptationOption)
+		< Id : AdaptiveActor | bestScore : BestScore, bestOption : BestOption, receivedScores : ReceivedScores >
+		=>
+		if Score > BestScore then
+			< Id : AdaptiveActor | bestScore : Score, bestOption : AdaptationOption, receivedScores : ReceivedScores + 1 >
+		else 
+			< Id : AdaptiveActor | bestScore : BestScore, bestOption : BestOption, receivedScores : ReceivedScores + 1 >
+		fi .
+		
+	rl [score] :
+		< Id : AdaptiveActor | receivedScores : 4, bestOption : BestOption >
+		=>
+		< Id : AdaptiveActor | adapting : false, bestScore : 0, bestOption : 0, receivedScores : 0, adapted : true > 
+		applyAdaptation(Id, BestOption).
+	
+endom)

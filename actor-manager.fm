@@ -1,0 +1,52 @@
+(omod ACTOR_MANAGER is
+
+	including ADAPTIVE_ACTOR .
+	including EXECUTION_ACTOR .
+	
+	class ActorManager | actors : Int, adapting : Int, ready : Bool .
+	
+	msg init : Int -> Msg .
+	var Id Adapting : Int .
+	
+	op systemConfig : -> Configuration .
+	rl systemConfig => 
+		< 'actorManager : ActorManager | actors : 0, adapting : 0, ready : false > .
+	
+	vars Actors Adapting Increment : Int .
+	
+	crl [initAdaptiveActors] :
+		< 'actorManager : ActorManager | actors : Actors, ready : false >
+		=>
+		< 'actorManager : ActorManager | actors : (Actors + 1) >
+		< adaptiveActorId(Actors + 1) : AdaptiveActor | adapting : false, bestScore : 0, bestOption : 0, receivedScores : 0, adapted : false >
+		if Actors < numberOfActors .
+	
+	crl [makeReadyAdaptiveActors] :
+		< 'actorManager : ActorManager | actors : Actors, ready : false >
+		=>
+		< 'actorManager : ActorManager | actors : Actors, ready : true >
+		if Actors == numberOfActors .
+
+	rl [startAdaptation] :
+		< 'actorManager : ActorManager | adapting : 0, ready : true >
+		=>
+		< 'actorManager : ActorManager | adapting : 1 >
+		startAdaptation(adaptiveActorId(1)) .
+		
+	crl [finishAdaptation] : 
+		finishAdaptation(Id)
+		< 'actorManager : ActorManager |  adapting : Adapting > 
+		=>
+		< 'actorManager : ActorManager | adapting : (Adapting + 1) >
+		startAdaptation(adaptiveActorId(Adapting + 1))
+		if Adapting < numberOfActors .
+		
+	crl [finishAdaptation] : 
+		finishAdaptation(Id)
+		< 'actorManager : ActorManager |  adapting : Adapting > 
+		=>
+		< 'actorManager : ActorManager | adapting : -1 >
+		if Adapting >= numberOfActors .
+		
+	
+endom)

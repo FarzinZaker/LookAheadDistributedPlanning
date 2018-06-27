@@ -1,0 +1,22 @@
+(omod ACTOR is
+	
+	protecting QID .
+	protecting INT .
+	protecting BOOL .
+	protecting RANDOM .
+	
+	including CONFIGURATION .
+	
+	sort ActorId .
+	op null : -> ActorId .
+	eq null = 'null .
+	
+	subsorts Int < Qid < ActorId < Oid .
+    
+	op numberOfActors : -> Int .
+	eq numberOfActors = (random(0) rem 10) .
+	
+	msg applyAdaptation : ActorId Int -> Msg .
+	msg finishAdaptation : ActorId -> Msg .
+	
+endom)

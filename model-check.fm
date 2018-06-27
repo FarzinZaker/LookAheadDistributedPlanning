@@ -1,0 +1,32 @@
+(omod MODEL_CHECK is
+
+	inc ACTOR_MANAGER .  
+    inc MODEL-CHECKER .  
+    inc SATISFACTION .  
+    ex LTL-SIMPLIFIER .  
+    inc LTL . 
+    
+    subsort Configuration < State .
+    
+    vars X Y : ActorId .  
+    var  C : Configuration .  
+    
+    op isAdapting : ActorId -> Prop . 
+    eq < X : AdaptiveActor | adapting : true > C |= isAdapting(X) = true . 
+    
+    op adaptationFinished : ActorId -> Prop . 
+    eq finishAdaptation(X) C |= adaptationFinished(X) = true . 
+    
+    op twoAreAdapting : -> Prop . 
+    eq < X : AdaptiveActor | adapting : true > < Y : AdaptiveActor | adapting : true > C |= twoAreAdapting = true .  
+         
+   	op testActorExists : -> Prop .
+   	eq < X : TestActor | > C |= testActorExists = true .
+         
+   	op adaptationInProgress : -> Prop .
+   	eq < X : AdaptiveActor | adapting : true > C |= adaptationInProgress = true .
+   	
+   	op testActorExistsWithoutAdaptationInProgress : -> Prop .
+   	eq testActorExists /\ (~ adaptationInProgress) = testActorExistsWithoutAdaptationInProgress .
+   	
+endom)

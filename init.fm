@@ -1,0 +1,2 @@
+select FULL-MAUDE .
+loop init .

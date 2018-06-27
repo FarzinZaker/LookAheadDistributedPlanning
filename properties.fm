@@ -1,0 +1,7 @@
+(frewrite [1000] in MODEL_CHECK : systemConfig .)
+
+(reduce in MODEL_CHECK : modelCheck(systemConfig, [] ~ twoAreAdapting .) 
+
+(reduce in MODEL_CHECK : modelCheck(systemConfig, [] ~ testActorExistsWithoutAdaptationInProgress) .)  
+
+(reduce in MODEL_CHECK : modelCheck(systemConfig, isAdapting(1001) -> <> adaptationFinished(1001) .) 

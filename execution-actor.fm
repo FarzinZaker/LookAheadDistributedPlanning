@@ -1,0 +1,12 @@
+(omod EXECUTION_ACTOR is
+
+	including ADAPTIVE_ACTOR .
+	
+	vars Id BestOption : Int .
+	
+	rl [applyAdaptation] : 
+		applyAdaptation(Id, BestOption)
+		=>
+		finishAdaptation(Id) .
+	
+endom)
