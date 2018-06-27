@@ -1,5 +1,5 @@
-# HybridPerformanceModel
-A Hybrid Approach to Run-time Application Performance Management
+# Look Ahead Distributed Planning
+A Look Ahead Distributed Planning For Autonomic Cloud Resource Provisioning
 
 Load Order:
 1. init.fm
